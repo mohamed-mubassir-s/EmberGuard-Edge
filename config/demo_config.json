@@ -1,0 +1,25 @@
+{
+    "thresholds": {
+        "smoke_watch_level": 300,
+        "smoke_critical_level": 600,
+        "temp_watch_c": 45.0,
+        "temp_critical_c": 65.0,
+        "flame_active_level": 1
+    },
+    "timings": {
+        "sample_period_ms": 1000,
+        "log_reading_every_n": 2,
+        "watch_persist_ms": 5000,
+        "clear_hold_ms": 5000,
+        "fault_fail_count": 3,
+        "fault_clear_count": 3,
+        "smoke_warmup_ms": 0
+    },
+    "blynk": {
+        "min_interval_ms": 1000,
+        "periodic_ms": 10000,
+        "http_timeout_ms": 5000,
+        "net_queue_len": 8
+    },
+    "_note": "These are DEMO DEFAULTS for the software simulator. They are NOT calibrated physical sensor thresholds. Real thresholds must come from physical measurement during Gate G1 calibration."
+}

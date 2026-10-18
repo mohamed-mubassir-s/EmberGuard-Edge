@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EmberGuard Edge | Login</title>
+<style>
+:root {
+  --bg:#0b1018; --panel:#131c29; --line:#273447;
+  --text:#edf3fa; --muted:#8d9db2; --orange:#ff824d;
+  --green:#49dfa0; --red:#ff5364;
+}
+* { box-sizing:border-box; }
+body {
+  margin:0; min-height:100vh; background:var(--bg); color:var(--text);
+  font-family:Segoe UI,Arial,sans-serif;
+  display:flex; align-items:center; justify-content:center; padding:24px;
+}
+.shell { width:100%; max-width:420px; }
+.brand { font-size:23px; font-weight:800; margin-bottom:6px; }
+.brand span { color:var(--orange); }
+.muted { color:var(--muted); font-size:13px; line-height:1.6; }
+.card {
+  margin-top:18px; background:var(--panel); border:1px solid var(--line);
+  border-radius:16px; padding:28px 24px;
+}
+h1 { font-size:22px; margin:0 0 8px; }
+label { display:block; font-size:13px; color:var(--muted); margin:16px 0 8px; }
+input {
+  width:100%; border:1px solid var(--line); border-radius:9px;
+  padding:12px 14px; background:#202c3c; color:var(--text); font-size:14px;
+}
+input:focus { outline:none; border-color:var(--orange); }
+.password-row { position:relative; }
+.password-row input { padding-right:84px; }
+.toggle {
+  position:absolute; right:8px; top:50%; transform:translateY(-50%);
+  border:1px solid var(--line); border-radius:8px; padding:6px 10px;
+  background:#1a2534; color:var(--muted); cursor:pointer; font-size:12px;
+}
+.toggle:hover { border-color:var(--orange); color:var(--text); }
+button.primary {
+  width:100%; margin-top:22px; border:0; border-radius:9px; padding:12px 14px;
+  background:var(--orange); color:#151515; font-weight:800; cursor:pointer; font-size:14px;
+}
+button.primary:hover { filter:brightness(1.05); }
+button.primary:disabled { opacity:.6; cursor:wait; }
+.error {
+  display:none; margin-top:14px; padding:12px; border-radius:10px;
+  border:1px solid var(--red); background:#351923; color:var(--red);
+  font-size:13px; font-weight:600;
+}
+.error.visible { display:block; }
+.note { margin-top:18px; text-align:center; }
+</style>
+</head>
+<body>
+  <div class="shell">
+    <div class="brand">🔥 EmberGuard <span>Edge</span></div>
+    <div class="muted">INTELLIGENT FIRE MONITORING</div>
+
+    <div class="card">
+      <h1>Sign in</h1>
+      <div class="muted">Enter your demo credentials to open the Fire Intelligence Center.</div>
+
+      <form id="loginForm" novalidate>
+        <label for="username">Username</label>
+        <input id="username" name="username" type="text" autocomplete="username" required autofocus>
+
+        <label for="password">Password</label>
+        <div class="password-row">
+          <input id="password" name="password" type="password" autocomplete="current-password" required>
+          <button type="button" class="toggle" id="togglePassword" aria-label="Show password">Show</button>
+        </div>
+
+        <div class="error" id="error" role="alert"></div>
+
+        <button class="primary" type="submit" id="submit">Sign in</button>
+      </form>
+    </div>
+
+    <p class="muted note">
+      Hackathon prototype authentication · Not enterprise-grade security.<br>
+      Use HTTPS and stronger controls before any public hosting.
+    </p>
+  </div>
+
+<script>
+const $ = id => document.getElementById(id);
+
+$("togglePassword").addEventListener("click", () => {
+  const input = $("password");
+  const show = input.type === "password";
+  input.type = show ? "text" : "password";
+  $("togglePassword").textContent = show ? "Hide" : "Show";
+  $("togglePassword").setAttribute("aria-label", show ? "Hide password" : "Show password");
+});
+
+$("loginForm").addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const error = $("error");
+  error.classList.remove("visible");
+  error.textContent = "";
+
+  const username = $("username").value.trim();
+  const password = $("password").value;
+  if (!username || !password) {
+    error.textContent = "Please enter both username and password.";
+    error.classList.add("visible");
+    return;
+  }
+
+  $("submit").disabled = true;
+  try {
+    const response = await fetch("/api/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Accept": "application/json" },
+      credentials: "same-origin",
+      body: JSON.stringify({ username, password })
+    });
+
+    let data = {};
+    try { data = await response.json(); } catch (_) { /* ignore non-JSON */ }
+
+    if (!response.ok) {
+      error.textContent = data.detail || data.error || "Invalid username or password.";
+      error.classList.add("visible");
+      return;
+    }
+
+    window.location.href = "/";
+  } catch (err) {
+    error.textContent = "Could not reach the server. Make sure the backend is running.";
+    error.classList.add("visible");
+  } finally {
+    $("submit").disabled = false;
+  }
+});
+</script>
+</body>
+</html>

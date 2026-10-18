@@ -1,0 +1,380 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EmberGuard Edge | Fire Intelligence</title>
+<style>
+:root {
+  --bg:#0b1018; --panel:#131c29; --line:#273447;
+  --text:#edf3fa; --muted:#8d9db2; --orange:#ff824d;
+  --green:#49dfa0; --red:#ff5364; --yellow:#ffd166;
+}
+* { box-sizing:border-box; }
+body { margin:0; background:var(--bg); color:var(--text); font-family:Segoe UI,Arial,sans-serif; }
+header { padding:20px 5%; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--line); gap:15px; flex-wrap:wrap; }
+.brand { font-size:23px; font-weight:800; }
+.brand span { color:var(--orange); }
+.muted { color:var(--muted); font-size:13px; line-height:1.6; }
+.pill { padding:8px 12px; border:1px solid var(--line); border-radius:30px; font-size:12px; }
+main { max-width:1250px; margin:auto; padding:28px 22px; }
+.welcome { display:flex; justify-content:space-between; align-items:center; gap:16px; flex-wrap:wrap; margin-bottom:24px; }
+h1 { font-size:28px; margin:0 0 8px; }
+h2 { font-size:16px; margin:0 0 18px; }
+.grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:15px; }
+.card { background:var(--panel); border:1px solid var(--line); border-radius:16px; padding:20px; min-width:0; }
+.metric { font-size:32px; font-weight:750; margin:15px 0 5px; }
+.unit { font-size:13px; color:var(--muted); font-weight:400; }
+.label { font-size:13px; color:var(--muted); }
+.icon { font-size:23px; }
+.layout { display:grid; grid-template-columns:1.4fr 1fr; gap:15px; margin-top:16px; }
+.bigstatus { display:flex; justify-content:space-between; align-items:center; gap:15px; }
+.status { font-size:23px; font-weight:800; color:var(--green); margin:10px 0; }
+button,select { border:1px solid var(--line); border-radius:9px; padding:11px 14px; background:#202c3c; color:var(--text); cursor:pointer; }
+button:hover { border-color:var(--orange); }
+button:disabled { opacity:.6; cursor:wait; }
+.primary { background:var(--orange); color:#151515; border:0; font-weight:800; }
+.controls { display:flex; gap:9px; flex-wrap:wrap; margin-top:16px; }
+.meter { height:9px; background:#293647; border-radius:20px; overflow:hidden; margin:14px 0; }
+.meter div { height:100%; width:8%; background:var(--green); transition:width .3s; }
+#events { display:flex; flex-direction:column; gap:10px; max-height:260px; overflow:auto; }
+.event { border-left:3px solid var(--green); padding:10px 12px; background:#192433; border-radius:5px; font-size:13px; overflow-wrap:anywhere; }
+.event.warn { border-color:var(--yellow); }
+.event.danger { border-color:var(--red); }
+canvas { width:100%; height:190px; display:block; }
+.statline { display:flex; justify-content:space-between; gap:10px; padding:8px 0; border-bottom:1px solid var(--line); }
+.footer { text-align:center; padding:28px; color:var(--muted); font-size:12px; }
+.alert-banner { display:none; padding:14px; margin-bottom:16px; border:1px solid var(--red); color:var(--red); border-radius:12px; background:#351923; font-weight:700; }
+.alert-banner.visible { display:block; }
+@media(max-width:800px) { .grid { grid-template-columns:repeat(2,minmax(0,1fr)); } .layout { grid-template-columns:1fr; } }
+@media(max-width:430px) { .grid { grid-template-columns:1fr; } main { padding:20px 14px; } }
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <div class="brand">🔥 EmberGuard <span>Edge</span></div>
+    <div class="muted">INTELLIGENT FIRE MONITORING</div>
+  </div>
+  <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+    <div class="pill" id="modePill">● CONNECTING...</div>
+    <button id="logout" type="button" title="Sign out">Logout</button>
+  </div>
+</header>
+
+<main>
+  <div class="welcome">
+    <div>
+      <h1>Fire Intelligence Center</h1>
+      <div class="muted">Live simulation · Backend-powered risk analysis</div>
+    </div>
+    <div class="muted">Last update: <span id="updated">Waiting...</span></div>
+  </div>
+
+  <div class="alert-banner" id="alertBanner" role="alert">
+    ⚠ CRITICAL DEMO ALERT — simulated fire indicators detected!
+  </div>
+
+  <div class="grid">
+    <div class="card">
+      <div class="icon">🌡️</div><div class="label">TEMPERATURE</div>
+      <div class="metric"><span id="temp">--</span><span class="unit"> °C</span></div>
+      <div class="muted" id="tempnote">Waiting for backend</div>
+    </div>
+    <div class="card">
+      <div class="icon">🌫️</div><div class="label">SMOKE LEVEL</div>
+      <div class="metric"><span id="smoke">--</span><span class="unit"> demo units</span></div>
+      <div class="muted" id="smokenote">Simulated sensor reading</div>
+    </div>
+    <div class="card">
+      <div class="icon">🔥</div><div class="label">FLAME SENSOR</div>
+      <div class="metric" id="flame" style="font-size:24px">--</div>
+      <div class="muted">Simulated sensor state</div>
+    </div>
+    <div class="card">
+      <div class="icon">🛡️</div><div class="label">FIRE RISK SCORE</div>
+      <div class="metric"><span id="risk">--</span><span class="unit"> / 100</span></div>
+      <div class="meter"><div id="riskbar"></div></div>
+      <div class="muted" id="risknote">Waiting for model</div>
+    </div>
+  </div>
+
+  <div class="layout">
+    <section class="card">
+      <div class="bigstatus">
+        <div>
+          <div class="label">SYSTEM ASSESSMENT</div>
+          <div id="state" class="status">● CONNECTING</div>
+          <div id="reason" class="muted">Connecting to the Python risk engine...</div>
+        </div>
+        <div class="icon">📡</div>
+      </div>
+      <div class="controls">
+        <select id="scenario" aria-label="Simulation scenario">
+          <option value="normal">Normal environment</option>
+          <option value="smoke">Smoke detected</option>
+          <option value="heat">High temperature</option>
+          <option value="fire">Fire emergency</option>
+        </select>
+        <button class="primary" id="run">Run Scenario</button>
+        <button id="auto">Start Auto Mode</button>
+        <button id="reset">Reset</button>
+      </div>
+      <p class="muted">Choose a scenario to send simulated sensor inputs to the Python backend. Auto mode periodically updates the selected scenario.</p>
+    </section>
+
+    <section class="card">
+      <h2>Live Risk Monitoring</h2>
+      <canvas id="chart" width="600" height="220"></canvas>
+      <div class="muted">Risk score history · newest reading on the right</div>
+    </section>
+
+    <section class="card">
+      <h2>System Diagnostics</h2>
+      <div class="statline"><span>Backend API</span><strong id="api">CHECKING</strong></div>
+      <div class="statline"><span>Sensor source</span><strong style="color:var(--yellow)">SIMULATED</strong></div>
+      <div class="statline"><span>Risk engine</span><strong id="engine">CHECKING</strong></div>
+      <div class="statline"><span>Hardware</span><strong style="color:var(--yellow)">NOT CONNECTED</strong></div>
+      <div class="controls"><button id="check">Check Backend</button></div>
+      <p class="muted" id="diagMessage">Checking backend connection...</p>
+    </section>
+
+    <section class="card">
+      <h2>Event Timeline</h2>
+      <div id="events"><div class="event">Dashboard started. Waiting for backend readings.</div></div>
+      <div class="controls"><button id="clear">Clear Timeline</button></div>
+    </section>
+  </div>
+</main>
+
+<div class="footer">
+  EmberGuard Edge · Hackathon simulation prototype · Not a certified fire detection system.
+  Readings are simulated and must not be used for real-life safety decisions.
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+let history = [];
+let previousState = "";
+let autoTimer = null;
+let requestBusy = false;
+
+async function apiFetch(url, options = {}) {
+  const response = await fetch(url, {
+    cache: "no-store",
+    credentials: "same-origin",
+    ...options
+  });
+  if (response.status === 401) {
+    window.location.href = "/login";
+    throw new Error("Session expired. Please sign in again.");
+  }
+  return response;
+}
+
+function addEvent(message, level = "") {
+  const item = document.createElement("div");
+  item.className = "event " + level;
+  item.textContent = new Date().toLocaleTimeString() + " — " + message;
+  $("events").prepend(item);
+  while ($("events").children.length > 30) $("events").lastChild.remove();
+}
+
+function drawChart() {
+  const canvas = $("chart");
+  const ctx = canvas.getContext("2d");
+  const w = canvas.width, h = canvas.height;
+  ctx.clearRect(0, 0, w, h);
+
+  ctx.font = "13px Arial";
+  ctx.lineWidth = 1;
+  ctx.strokeStyle = "#293647";
+  ctx.fillStyle = "#8d9db2";
+
+  for (let i = 0; i <= 4; i++) {
+    const y = 12 + i * (h - 35) / 4;
+    ctx.beginPath();
+    ctx.moveTo(35, y);
+    ctx.lineTo(w - 8, y);
+    ctx.stroke();
+    ctx.fillText(String(100 - i * 25), 2, y + 4);
+  }
+
+  if (history.length === 0) return;
+
+  const points = history.map((value, i) => ({
+    x: history.length === 1 ? w / 2 : 38 + i * (w - 50) / (history.length - 1),
+    y: 12 + (100 - value) * (h - 35) / 100
+  }));
+
+  ctx.strokeStyle = "#ff824d";
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  points.forEach((p, i) => i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y));
+  ctx.stroke();
+
+  points.forEach(p => {
+    ctx.fillStyle = "#ff824d";
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, 4, 0, Math.PI * 2);
+    ctx.fill();
+  });
+}
+
+function renderStatus(data) {
+  const temp = Number(data.temperature);
+  const smoke = Number(data.smoke);
+  const risk = Number(data.risk);
+  const flame = data.flame === true || data.flame === "TRIGGERED";
+
+  $("temp").textContent = Number.isFinite(temp) ? temp.toFixed(1) : "--";
+  $("smoke").textContent = Number.isFinite(smoke) ? smoke : "--";
+  $("flame").textContent = flame ? "TRIGGERED" : "CLEAR";
+  $("flame").style.color = flame ? "var(--red)" : "var(--green)";
+
+  $("risk").textContent = Number.isFinite(risk) ? risk : "--";
+  $("riskbar").style.width = Math.max(0, Math.min(100, risk || 0)) + "%";
+  $("riskbar").style.background =
+    risk >= 80 ? "var(--red)" : risk >= 35 ? "var(--yellow)" : "var(--green)";
+
+  $("risknote").textContent =
+    risk >= 80 ? "Critical estimated risk" :
+    risk >= 35 ? "Elevated estimated risk" : "Low estimated risk";
+
+  const state = String(data.state || "UNKNOWN").toUpperCase();
+  const stateColor = state === "CRITICAL" ? "var(--red)" :
+                     state === "WARNING" ? "var(--yellow)" :
+                     state === "NORMAL" ? "var(--green)" : "var(--muted)";
+
+  $("state").textContent = (state === "CRITICAL" ? "▲ " : "● ") + state;
+  $("state").style.color = stateColor;
+  $("reason").textContent = data.reason || "No risk explanation provided.";
+  $("tempnote").textContent = temp >= 70 ? "High simulated temperature" : "Simulated reading";
+  $("smokenote").textContent = smoke >= 400 ? "Elevated simulated smoke" : "Simulated reading";
+  $("updated").textContent = data.updated ? new Date(data.updated).toLocaleTimeString() : new Date().toLocaleTimeString();
+
+  $("alertBanner").classList.toggle("visible", state === "CRITICAL");
+  $("modePill").textContent = "● SIMULATION MODE";
+  $("modePill").style.color = stateColor;
+
+  if (Number.isFinite(risk)) {
+    history.push(risk);
+    if (history.length > 25) history.shift();
+    drawChart();
+  }
+
+  if (previousState && state !== previousState) {
+    addEvent("State changed: " + previousState + " → " + state + ". " + (data.reason || ""),
+      state === "CRITICAL" ? "danger" : state === "WARNING" ? "warn" : "");
+  }
+  previousState = state;
+}
+
+async function getStatus() {
+  const response = await apiFetch("/api/status");
+  if (!response.ok) throw new Error("Status API returned " + response.status);
+  return await response.json();
+}
+
+async function runScenario() {
+  if (requestBusy) return;
+  requestBusy = true;
+  $("run").disabled = true;
+
+  try {
+    const selected = $("scenario").value;
+    const response = await apiFetch("/api/scenario/" + encodeURIComponent(selected), {
+      method: "POST",
+      headers: { "Accept": "application/json" }
+    });
+
+    if (!response.ok) throw new Error("Scenario API returned " + response.status);
+    const data = await response.json();
+    if (data.error) throw new Error(data.error);
+
+    renderStatus(data);
+    addEvent("Scenario executed: " + selected.toUpperCase(),
+      data.state === "CRITICAL" ? "danger" : data.state === "WARNING" ? "warn" : "");
+  } catch (error) {
+    addEvent("Could not run scenario: " + error.message, "danger");
+    $("diagMessage").textContent = "Scenario request failed. Check that the backend is running.";
+  } finally {
+    requestBusy = false;
+    $("run").disabled = false;
+  }
+}
+
+async function refreshStatus() {
+  try {
+    const data = await getStatus();
+    renderStatus(data);
+    $("api").textContent = "ONLINE";
+    $("api").style.color = "var(--green)";
+    $("engine").textContent = "CONNECTED";
+    $("engine").style.color = "var(--green)";
+    $("diagMessage").textContent = "Python backend is responding. Values are simulated.";
+    $("modePill").textContent = "● BACKEND CONNECTED";
+  } catch (error) {
+    $("api").textContent = "OFFLINE";
+    $("api").style.color = "var(--red)";
+    $("engine").textContent = "UNAVAILABLE";
+    $("engine").style.color = "var(--red)";
+    $("modePill").textContent = "● CONNECTION ERROR";
+    $("diagMessage").textContent = "Backend unavailable. Keep the Uvicorn terminal running.";
+  }
+}
+
+async function simulateTick() {
+  try {
+    const response = await apiFetch("/api/simulate", { method: "POST" });
+    if (!response.ok) throw new Error("Simulation API returned " + response.status);
+    const data = await response.json();
+    renderStatus(data);
+  } catch (error) {
+    $("diagMessage").textContent = "Simulation update failed: " + error.message;
+  }
+}
+
+$("logout").addEventListener("click", async () => {
+  try {
+    await fetch("/api/logout", { method: "POST", credentials: "same-origin" });
+  } catch (_) { /* still send user to login */ }
+  window.location.href = "/login";
+});
+
+$("run").addEventListener("click", runScenario);
+
+$("reset").addEventListener("click", async () => {
+  $("scenario").value = "normal";
+  await runScenario();
+  addEvent("Simulation reset to normal scenario.");
+});
+
+$("auto").addEventListener("click", () => {
+  if (autoTimer) {
+    clearInterval(autoTimer);
+    autoTimer = null;
+    $("auto").textContent = "Start Auto Mode";
+    addEvent("Automatic simulation paused.");
+  } else {
+    $("auto").textContent = "Stop Auto Mode";
+    addEvent("Automatic simulation started.");
+    simulateTick();
+    autoTimer = setInterval(simulateTick, 3000);
+  }
+});
+
+$("check").addEventListener("click", refreshStatus);
+
+$("clear").addEventListener("click", () => {
+  $("events").replaceChildren();
+  addEvent("Timeline cleared.");
+});
+
+refreshStatus();
+drawChart();
+setInterval(refreshStatus, 5000);
+</script>
+</body>
+</html>
